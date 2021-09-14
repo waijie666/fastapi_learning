@@ -3,6 +3,7 @@ import pytest
 def test_success():
     assert 4 == 4
 
+@pytest.mark.xfail()
 def test_fail():
     assert 3 == 4
 
