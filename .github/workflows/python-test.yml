@@ -23,6 +23,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
+        ls -l
+        env
         python -m pip install --upgrade pip
         python -m pip install --upgrade pipenv
         pipenv install --dev --python $(python --version | awk \'{print $2}\')
