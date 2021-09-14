@@ -41,8 +41,6 @@ for k,v in  logging.Logger.manager.loggerDict.items()  :
             for h in v.handlers:
                 print('     +++',str(h.__class__)[8:-2] )
 
-logger.error("ABC")
-
 items = {"count":1}
 
 @app.on_event("startup")
