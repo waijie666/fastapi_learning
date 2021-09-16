@@ -3,10 +3,10 @@ from typing import Optional
 from fastapi import FastAPI, Request
 from fastapi.logger import logger 
 from pydantic import BaseModel
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 import logging
-import sys
 import os 
+import time
 
 class Item(BaseModel):
     item_id: int
@@ -30,6 +30,8 @@ else:
     # https://github.com/tiangolo/fastapi/issues/2019
     LOG_FORMAT2 = "%(asctime)s | %(levelname)s | %(message)s"
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT2)
+    #uvicorn_logger = logging.getLogger("uvicorn.error")
+    #uvicorn_logger.handlers = []
 
 root_logger = logging.getLogger()
 print('+ [%s] {%s} ' % (str.ljust( "RootLogger", 20)  , str(root_logger.__class__)[8:-2]) )
@@ -45,7 +47,22 @@ items = {"count":1}
 
 @app.on_event("startup")
 async def startup_event():
-    ...
+    logger.info("Start up complete")
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
+
+@app.exception_handler(Exception)
+async def custom_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=418,
+        content={"message": f"Oops! {exc.__class__.__str__} did something. We are sorry"},
+    )
 
 @app.get("/", response_class=RedirectResponse)
 def redirect_docs():
@@ -76,5 +93,9 @@ def get_count():
 def add_count():
     items["count"] += 1
     return {"item_id": items["count"]}
+
+@app.get('/raise_exception', status_code=418)
+def raise_exception():
+    raise Exception()
 
 
